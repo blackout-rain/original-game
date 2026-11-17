@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ゲームアイデア20選</title>
+  <style>
+    :root { --bg:#1b2328; --card:#27343b; --text:#f1f5f2; --sub:#9fb3ba; --accent:#7bd389; --sim:#6cc4ff; --act:#ff8f6b; --rog:#d3a6ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,"Yu Gothic",sans-serif; }
+    header { max-width:1100px; margin:0 auto; padding:20px 16px 4px; }
+    h1 { margin:0 0 4px; font-size:1.5rem; }
+    header p { margin:0; color:var(--sub); font-size:.9rem; }
+    #grid { max-width:1100px; margin:0 auto; padding:16px; display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+    .card { background:var(--card); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+    .preview { display:grid; grid-template-columns:repeat(9,1fr); gap:2px; padding:8px; }
+    .cell { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:clamp(14px,2.2vw,20px); border-radius:3px; background:rgba(0,0,0,.18); line-height:1; }
+    .cell.empty { background:rgba(0,0,0,.06); }
+    .hero { animation:bob 1s ease-in-out infinite; }
+    @keyframes bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
+    .body { padding:10px 14px 14px; }
+    h2 { margin:0 0 2px; font-size:1.05rem; }
+    h2 span { color:var(--sub); font-weight:400; margin-right:6px; }
+    .tag { margin:0 0 8px; color:var(--sub); font-size:.85rem; }
+    ul { list-style:none; margin:0; padding:0; font-size:.82rem; display:grid; gap:4px; }
+    li b { display:inline-block; min-width:3.2em; font-size:.72rem; padding:1px 6px; border-radius:99px; color:#10181c; margin-right:6px; text-align:center; }
+    .s b { background:var(--sim); } .a b { background:var(--act); } .r b { background:var(--rog); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎮 シミュレーション × アクション × ローグライク アイデア20選</h1>
+    <p>各案は「拠点で育てる(シム)」「自分で操作して戦う・動く(アクション)」「毎回変わる探索や死に戻り(ローグライク)」の3要素で整理しています。絵はイメージ用の簡易プレビューです。</p>
+  </header>
+  <div id="grid"></div>
+
+  <script>
+    // g("行|行|...") : 行はスペース区切りのマス。"." は空き、"H" は主人公。
+    const g = (s) => s.split("|").map((r) => r.trim().split(/\s+/));
+
+    const IDEAS = [
+      { n:"迷宮の村", tag:"昼は村を育て、夜は迷宮へ。持ち帰った素材が村を変える", hero:"🧙", bg:"#4b7f52",
+        sim:"村の建物と住民を育てる", act:"迷宮を自分で操作して探索・戦闘", rog:"迷宮は毎回ランダム、倒れたら荷物を失う",
+        grid:g("🌳 🏠 🏠 . 🌳 . . 🌳 .|🌾 🌾 🏠 . H . . . .|🌾 🌾 . . . . . 🌀 .|. . 🌲 🌲 . . . . 👹|. . . . 🪙 . . . .") },
+      { n:"防衛ファーム", tag:"畑を育てて、夜に襲ってくる怪物から作物を守る", hero:"🧑‍🌾", bg:"#5a7a3a",
+        sim:"作物の育成・収穫・出荷", act:"農具と罠で夜の襲撃を迎撃", rog:"毎晩の襲撃の組み合わせと強化がランダム",
+        grid:g("🌾 🌾 🌾 🌾 🌾 . . 🐺 .|🌾 🌾 🌾 🌾 🌾 . 🐗 . .|🌾 🌾 H 🌾 🌾 . . . 🐺|🌾 🌾 🌾 🌾 🌾 . . 🐗 .|🏠 . . . . . . . .") },
+      { n:"浮遊島キャンプ", tag:"空に浮かぶ島を拡張しながら、他の島へ素材を取りに飛ぶ", hero:"🪂", bg:"#3b6a96",
+        sim:"島の拡張・施設の配置", act:"滑空して島々を移動、空賊と戦う", rog:"周辺の島は出発ごとに生成",
+        grid:g(". . . ☁ . . . 🦅 .|. 🏝 . . . H . . .|. . . . . . 🏝 . .|⛺ 🌳 . ☁ . . 🐦 . .|🏝 . . . . . . . .") },
+      { n:"魔王の迷宮経営", tag:"魔王側になって迷宮を作り、挑む勇者を迎え撃つ", hero:"👹", bg:"#4a3b55",
+        sim:"部屋・罠・モンスターの配置と経営", act:"最後は魔王を直接操作して勇者と戦う", rog:"来る勇者の編成が毎回違う",
+        grid:g("🧱 🧱 🧱 🧱 🧱 🧱 🧱 🧱 🧱|🧱 💀 . 🔥 . 💀 . 🧱 🧱|🧱 . . . 🧱 . . . 🧱|🧱 🧙 . H . . 🗝 . 🧱|🧱 🧱 🧱 🚪 🧱 🧱 🧱 🧱 🧱") },
+      { n:"宇宙ステーション修理屋", tag:"壊れていくステーションを直しつつ、小惑星で資材を集める", hero:"🧑‍🚀", bg:"#1e2a4a",
+        sim:"電力・酸素・居住区の管理", act:"宇宙服で小惑星帯を飛び回る", rog:"小惑星帯とトラブルが出撃ごとに変わる",
+        grid:g(". ✦ . . . ✦ . . .|. . 🛰 🛰 🛰 . . 🪨 .|✦ . 🛰 . 🛰 . H . .|. . . . . . . 🪨 ✦|. 🪨 . ✦ . . . . .") },
+      { n:"深海基地", tag:"深海に基地を作り、潜水して沈没船や遺跡を探索", hero:"🤿", bg:"#12425a",
+        sim:"酸素・電力・居住区の拡張", act:"潜水・銛で深海生物と戦う", rog:"海底地形と遭難船が潜るたびに変化",
+        grid:g(". 🐟 . . . . 🐠 . .|🏭 🏭 . . H . . 🦑 .|🏠 🏠 . . . 🪸 . . .|🪨 . . 🚢 . . . 🐙 .|🪨 🪨 . . . . 🪨 🪨 🪨") },
+      { n:"墓守の農場", tag:"墓地で骸骨や幽霊を使役して、死者の村を栄えさせる", hero:"🧛", bg:"#3b3a4f",
+        sim:"墓地を拡張し、死者を労働力に", act:"鍬とランタンで侵入者を撃退", rog:"毎晩の来訪者(墓荒らし・聖職者)がランダム",
+        grid:g("🪦 🪦 . 🌙 . 🪦 🪦 . .|💀 . 🪦 . . . 🪦 💀 .|. . . H . . . . .|🪦 💀 . . 🎃 . 🪦 . .|🏚 . . . . . . 🧑 .") },
+      { n:"動く要塞列車", tag:"列車を改造しながら荒野を走り、駅や街で交易・略奪", hero:"🤠", bg:"#7a5a3a",
+        sim:"車両の増設・乗員の管理", act:"屋根の上で襲撃者と銃撃戦", rog:"ルートとイベントは毎回変わる",
+        grid:g(". . . ☀ . . . . .|🌵 . . . . . . 🌵 .|🚂 🚃 🚃 🚃 🚃 🚃 . . .|. . H . . . . 🏜 .|🌵 . . 🪨 . . 🦂 . .") },
+      { n:"魔法学園の運営", tag:"学園を運営しつつ、生徒を連れて実習ダンジョンへ", hero:"🧙", bg:"#4a4a7a",
+        sim:"校舎・授業・生徒の育成", act:"先生として実習ダンジョンで戦う", rog:"実習ダンジョンは毎週ランダム、生徒は卒業して引き継ぐ",
+        grid:g("🏰 🏰 🏰 . . . 🌲 🌲 .|🏰 🎓 🏰 . 📚 . . . .|. . . . . . . 🌀 .|🎓 . H . . . 👻 . .|. . . . . . . . .") },
+      { n:"冒険者の酒場", tag:"酒場の店主として料理を出し、食材のために自分も狩りへ", hero:"🧑‍🍳", bg:"#7a4f3a",
+        sim:"店のレイアウト・メニュー・客の満足度", act:"食材を求めて森で狩り", rog:"出会う客と手に入る食材が日ごとに変化",
+        grid:g("🍺 🍺 🪑 🪑 🪑 . 🌲 🌲 .|🍖 🧑 🪑 🧑 🪑 . 🌲 H 🐗|🍲 . . . . . . . .|🚪 . . . . . 🌲 🐺 .|. . . . . . . . .") },
+      { n:"錬金術師の工房", tag:"素材を採り、調合して売る。レシピは冒険で発見する", hero:"🧪", bg:"#3f6a5a",
+        sim:"工房の拡張・調合・販売", act:"採取地で魔物から素材を確保", rog:"採取地と素材の質が毎回違う",
+        grid:g("⚗ ⚗ 🧴 🧴 . . 🍄 🍄 .|🏠 . . . . 🌿 . H 🍄|📦 📦 . . . . 🐍 . .|. . . . 🌲 🌲 . . .|. . . . . . . . .") },
+      { n:"ロボ工場サバイバル", tag:"工場を自動化しながら、暴走ロボの襲撃を撃退", hero:"🤖", bg:"#4a5560",
+        sim:"生産ラインの設計と自動化", act:"自機ロボで戦闘・修理", rog:"襲撃波とパーツ強化がランダム",
+        grid:g("🏭 ⚙ ⚙ ⚙ 📦 . . 👾 .|🏭 ⚙ ⚙ ⚙ 📦 . 👾 . .|. . . . . . . . .|⚡ . H . . . . 👾 .|🔧 . . . . . . . .") },
+      { n:"氷河のキャンプ", tag:"吹雪の中で暖を保つ拠点を守り、凍った遺跡を探索", hero:"🧑‍🚒", bg:"#4a7090",
+        sim:"暖房・食料・仲間の管理", act:"吹雪の中を移動して探索・戦闘", rog:"遺跡と天候が探索ごとに変わる",
+        grid:g("🧊 . . . 🌨 . . 🧊 .|. ⛺ 🔥 ⛺ . . . . .|. . . . . H . 🐻 .|🧊 . . 🌨 . . . . .|. . 🏛 . . . . 🧊 .") },
+      { n:"英雄と都市国家", tag:"都市を広げつつ、英雄を操作して周辺を遠征", hero:"🛡", bg:"#5a7a4a",
+        sim:"都市の建設・内政・税収", act:"英雄を直接操作して戦闘", rog:"遠征先と手に入る遺物が毎回ランダム",
+        grid:g("🏰 🏠 🏠 🏠 . . 🌲 🌲 .|🏠 🌾 🌾 🏠 . H . . .|🏠 🌾 🌾 . . . . 🐲 .|. . . . 🌲 . . . .|⛰ ⛰ . . . . 🏚 . .") },
+      { n:"モンスター牧場", tag:"モンスターを育てて、一緒にダンジョンへ潜る", hero:"🧑", bg:"#5a8a5a",
+        sim:"飼育・進化・牧場の拡張", act:"相棒と協力して探索・戦闘", rog:"ダンジョンは毎回生成、仲間は引き継ぎ可能",
+        grid:g("🌳 🥚 🥚 🌳 . . . 🌀 .|🐣 🐥 . 🏠 . H 🐾 . .|🌾 🌾 . . . 🐾 . . .|. . 🐑 . . . . . .|. . . . . . . . .") },
+      { n:"海賊船団", tag:"船を改造して島々を巡り、宝と仲間を集める", hero:"🏴‍☠️", bg:"#2f6a8a",
+        sim:"船の改造・船員の管理", act:"海戦と上陸戦をリアルタイムで操作", rog:"海図と島のイベントが毎回変わる",
+        grid:g(". . . ☁ . . . . .|. . . . . . 🏝 . .|⛵ ⛵ . . H . . 🦈 .|. . . . . . . . .|🏝 . . . 🌊 . . 🐙 .") },
+      { n:"森の再生者", tag:"汚染された森を浄化し、自然の力で生態系を育てる", hero:"🧚", bg:"#3a6a3f",
+        sim:"植樹・動物の定着・資源循環", act:"精霊を操り汚染の怪物を浄化", rog:"汚染の広がり方が周回ごとに変わる",
+        grid:g("🌳 🌳 🌱 🌱 . 💀 💀 . .|🌳 🦌 🌱 . H . 💀 . .|🌸 🌸 🌱 . . . . 👾 .|🌳 🌳 . . . . . . .|🦋 . . . . . . . .") },
+      { n:"遺跡発掘博物館", tag:"遺跡を発掘して展示。博物館が育つほど遺跡が深くなる", hero:"🧑‍🔬", bg:"#7a6a4a",
+        sim:"展示・来館者・研究の管理", act:"遺跡内の罠や守護者に挑む", rog:"遺跡の構造と出土品が毎回違う",
+        grid:g("🏛 🏛 🏛 . . . 🏺 . .|🖼 🧑 🖼 . . 🧱 🧱 🧱 .|. . . . . 🧱 H 🗿 .|. . . . . 🧱 . 🧱 .|. . . . . 🧱 🧱 🧱 .") },
+      { n:"ジャンクヤード惑星", tag:"廃品の山で拠点を作り、リサイクルで文明を再建", hero:"🧑‍🔧", bg:"#6a5a4a",
+        sim:"廃品の分別・工場・居住区", act:"ゴミの山を探索、廃棄ロボと戦う", rog:"廃品の山は日ごとに入れ替わる",
+        grid:g("🗑 🗑 . 🏭 . . 🗑 🗑 .|🗑 . . . . H . 🤖 .|⛺ . ♻ . . . . . .|🔩 . . . 🗑 . . 🗑 .|. . . . . . . . .") },
+      { n:"ループする村", tag:"ループごとに村が滅びる。知識と少しの遺産だけ引き継ぐ", hero:"🧑", bg:"#6a4a5a",
+        sim:"限られた日数で村を発展させる", act:"滅びの原因となる敵と戦う", rog:"ループで状況が変わり、死ぬたびに強くなる",
+        grid:g("🏠 🏠 . 🌳 . . . ☄ .|🌾 🌾 . . . . . . .|. . . H . . 🔥 . .|🏠 . . . . 🌀 . . .|. . . . . . . . .") },
+    ];
+
+    const root = document.getElementById("grid");
+    IDEAS.forEach((d, i) => {
+      const card = document.createElement("article");
+      card.className = "card";
+      const cells = d.grid.flatMap((row) => { const r = row.slice(0, 9); while (r.length < 9) r.push("."); return r; })
+        .map((t) => {
+          if (t === ".") return `<div class="cell empty"></div>`;
+          if (t === "H") return `<div class="cell hero">${d.hero}</div>`;
+          return `<div class="cell">${t}</div>`;
+        }).join("");
+      card.innerHTML = `
+        <div class="preview" style="background:${d.bg}">${cells}</div>
+        <div class="body">
+          <h2><span>${i + 1}.</span>${d.n}</h2>
+          <p class="tag">${d.tag}</p>
+          <ul>
+            <li class="s"><b>シム</b>${d.sim}</li>
+            <li class="a"><b>アクション</b>${d.act}</li>
+            <li class="r"><b>ローグ</b>${d.rog}</li>
+          </ul>
+        </div>`;
+      root.appendChild(card);
+    });
+  </script>
+</body>
+</html>

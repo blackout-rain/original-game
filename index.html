@@ -3,32 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ちいさな村づくり</title>
+  <title>四人の守り手</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main>
-    <h1>🏘️ ちいさな村づくり</h1>
-    <section id="stats">
-      <span title="日数">📅 <b id="day">1</b>日目</span>
-      <span title="木材">🪵 <b id="wood">0</b></span>
-      <span title="食料">🌾 <b id="food">0</b></span>
-      <span title="お金">💰 <b id="gold">0</b></span>
-      <span title="人口 / 上限">👥 <b id="pop">0</b> / <b id="cap">0</b></span>
-    </section>
-
-    <section id="toolbar"></section>
-    <p id="hint">建物を選んでマスをクリックで建設。右クリックで取り壊し(50%返金)。</p>
-
-    <div id="grid"></div>
-
-    <section id="controls">
-      <button data-speed="0">⏸ 停止</button>
-      <button data-speed="1" class="active">▶ 1x</button>
-      <button data-speed="3">⏩ 3x</button>
-      <button id="reset">🗑 リセット</button>
-    </section>
-    <p id="message"></p>
+    <div id="stage">
+      <canvas id="cv" width="960" height="600"></canvas>
+      <div id="overlay"></div>
+    </div>
+    <p id="help">移動: WASD/矢印 ／ 攻撃: マウスクリック or Space(マウス方向) ／ 切替: 1〜4 or Q/E(切り替えると連携スキル) ／ 一時停止: P</p>
   </main>
   <script src="game.js"></script>
 </body>

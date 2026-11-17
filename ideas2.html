@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ゲームアイデア21〜40(マス以外)</title>
+  <style>
+    :root { --bg:#1b2328; --card:#27343b; --text:#f1f5f2; --sub:#9fb3ba; --sim:#6cc4ff; --act:#ff8f6b; --rog:#d3a6ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,"Yu Gothic",sans-serif; }
+    header { max-width:1100px; margin:0 auto; padding:20px 16px 4px; }
+    h1 { margin:0 0 4px; font-size:1.5rem; }
+    header p { margin:0 0 4px; color:var(--sub); font-size:.9rem; }
+    header a { color:var(--sim); }
+    #grid { max-width:1100px; margin:0 auto; padding:16px; display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; }
+    .card { background:var(--card); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+    svg { display:block; width:100%; height:auto; }
+    .hero { animation:bob 1s ease-in-out infinite; }
+    @keyframes bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
+    .body { padding:10px 14px 14px; }
+    h2 { margin:0 0 2px; font-size:1.05rem; }
+    h2 span { color:var(--sub); font-weight:400; margin-right:6px; }
+    .form { display:inline-block; font-size:.7rem; color:var(--sub); border:1px solid #456; border-radius:99px; padding:1px 8px; margin:2px 0 6px; }
+    .tag { margin:0 0 8px; color:var(--sub); font-size:.85rem; }
+    ul { list-style:none; margin:0; padding:0; font-size:.82rem; display:grid; gap:4px; }
+    li b { display:inline-block; min-width:3.2em; font-size:.72rem; padding:1px 6px; border-radius:99px; color:#10181c; margin-right:6px; text-align:center; }
+    .s b { background:var(--sim); } .a b { background:var(--act); } .r b { background:var(--rog); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧭 マス目以外の見せ方 アイデア20選(21〜40)</h1>
+    <p>断面図・ノードマップ・放射状・レーン・カード・自由移動・横/縦スクロールなど、画面の形を変えた案です。<a href="ideas.html">1〜20(マス目中心)はこちら</a></p>
+  </header>
+  <div id="grid"></div>
+
+  <script>
+    const W = 360, H = 200;
+    const T = (x, y, e, s = 22, c = "") => `<text x="${x}" y="${y}" font-size="${s}" text-anchor="middle" dominant-baseline="central" class="${c}">${e}</text>`;
+    const R = (x, y, w, h, f, o = 1, r = 6) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${f}" opacity="${o}"/>`;
+    const hero = (x, y, e, s = 26) => T(x, y, e, s, "hero");
+
+    // 画面形式ごとの描画関数
+    const GEN = {
+      // 断面図: 地上 + 地下の部屋
+      side: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0) + R(0, 70, W, 130, p.ground, 1, 0);
+        p.surface.forEach(([x, e]) => (o += T(x, 52, e, 26)));
+        o += hero(p.hx, 52, p.hero);
+        p.layers.forEach((row, i) => {
+          const w = (W - 20) / row.length;
+          row.forEach((e, j) => {
+            o += R(14 + j * w, 76 + i * 40, w - 8, 34, "rgba(0,0,0,.28)");
+            o += T(14 + j * w + (w - 8) / 2, 93 + i * 40, e, 20);
+          });
+        });
+        return o;
+      },
+      // ノードマップ
+      nodes: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        const pts = p.cols.map((c, i) => c.map((e, j) => [30 + i * 75, ((j + 1) * H) / (c.length + 1), e]));
+        pts.forEach((c, i) => {
+          if (i < pts.length - 1) c.forEach((a) => pts[i + 1].forEach((b) => (o += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="rgba(255,255,255,.3)" stroke-width="2"/>`)));
+        });
+        pts.forEach((c, i) => c.forEach((a) => {
+          o += `<circle cx="${a[0]}" cy="${a[1]}" r="17" fill="rgba(0,0,0,.4)" stroke="${i === 0 ? "#fff" : "rgba(255,255,255,.4)"}" stroke-width="${i === 0 ? 3 : 1.5}"/>` + T(a[0], a[1], a[2], 18);
+        }));
+        return o + hero(30, pts[0][0][1] - 30, p.hero, 22);
+      },
+      // 放射状: 中心を守る
+      orbit: (p) => {
+        const cx = 180, cy = 100, RR = [38, 62, 88];
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        RR.forEach((r) => (o += `<ellipse cx="${cx}" cy="${cy}" rx="${r * 1.8}" ry="${r}" fill="none" stroke="rgba(255,255,255,.25)" stroke-dasharray="3 4"/>`));
+        o += T(cx, cy, p.center, 30);
+        const pos = (ring, a) => [cx + RR[ring] * 1.8 * Math.cos((a * Math.PI) / 180), cy + RR[ring] * Math.sin((a * Math.PI) / 180)];
+        [...p.items, ...p.foes].forEach(([e, ring, a]) => { const [x, y] = pos(ring, a); o += T(x, y, e, 18); });
+        const [hx, hy] = pos(p.hr, p.ha);
+        return o + hero(hx, hy, p.hero, 22);
+      },
+      // 3レーン
+      lanes: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        [0, 1, 2].forEach((i) => { o += R(8, 10 + i * 62, W - 16, 56, "rgba(0,0,0,.2)") + T(28, 38 + i * 62, p.base, 24); });
+        p.items.forEach(([e, l, x]) => (o += T(x, 38 + l * 62, e, 22)));
+        return o + hero(p.hx, 38 + p.hl * 62, p.hero);
+      },
+      // 自由移動アリーナ
+      arena: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        o += `<ellipse cx="180" cy="100" rx="165" ry="90" fill="rgba(255,255,255,.07)" stroke="rgba(255,255,255,.25)" stroke-width="2"/>`;
+        p.items.forEach(([e, x, y, s]) => (o += T(x, y, e, s || 22)));
+        o += `<circle cx="180" cy="100" r="38" fill="rgba(255,255,255,.1)" stroke="#fff" stroke-dasharray="4 4" opacity=".7"/>`;
+        return o + hero(180, 100, p.hero, 28);
+      },
+      // カード
+      cards: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0) + R(0, 0, W, 95, "rgba(0,0,0,.2)", 1, 0);
+        p.board.forEach((e, i) => { o += R(20 + i * 64, 18, 56, 64, "rgba(255,255,255,.1)"); o += i === 0 ? hero(48, 50, e, 28) : T(48 + i * 64, 50, e, 28); });
+        p.cards.forEach(([e, c], i) => {
+          const x = 24 + i * 80;
+          o += R(x, 108, 68, 86, "#f4efe2", 1, 8) + T(x + 34, 152, e, 30);
+          o += `<circle cx="${x + 11}" cy="${120}" r="10" fill="#4aa3ff"/><text x="${x + 11}" y="120" font-size="12" fill="#fff" text-anchor="middle" dominant-baseline="central">${c}</text>`;
+        });
+        return o;
+      },
+      // 地下を掘り進める
+      cave: (p) => {
+        let o = R(0, 0, W, H, p.sky, 1, 0) + R(0, 48, W, 152, p.ground, 1, 0);
+        o += `<polyline points="${p.path.map((q) => q.join(",")).join(" ")}" fill="none" stroke="${p.tunnel}" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>`;
+        p.surface.forEach(([x, e]) => (o += T(x, 30, e, 24)));
+        p.items.forEach(([e, x, y]) => (o += T(x, y, e, 20)));
+        return o + hero(p.hx, p.hy, p.hero, 22);
+      },
+      // 縦の塔
+      tower: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0) + R(0, 172, W, 28, p.ground, 1, 0);
+        const n = p.floors.length, h = (170 - 8) / n;
+        p.floors.forEach((row, i) => {
+          const y = 8 + i * h;
+          o += R(110, y + 2, 140, h - 4, "rgba(255,255,255,.14)");
+          row.forEach((e, j) => (o += T(110 + (140 * (j + 0.5)) / row.length, y + h / 2, e, Math.min(22, h - 12))));
+        });
+        p.side.forEach(([e, x, y]) => (o += T(x, y, e, 22)));
+        return o + hero(p.hx, p.hy, p.hero, 24);
+      },
+      // 時間バー + 場面
+      timeline: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0), x = 14;
+        const total = p.segs.reduce((a, s) => a + s.w, 0);
+        p.segs.forEach((s) => {
+          const w = ((W - 28) * s.w) / total;
+          o += R(x, 12, w - 2, 24, s.c, 1, 4) + `<text x="${x + w / 2}" y="24" font-size="11" fill="#fff" text-anchor="middle" dominant-baseline="central">${s.l}</text>`;
+          x += w;
+        });
+        const mx = 14 + (W - 28) * p.now;
+        o += `<polygon points="${mx - 6},40 ${mx + 6},40 ${mx},48" fill="#fff"/>` + R(14, 56, W - 28, 130, "rgba(0,0,0,.25)");
+        p.scene.forEach(([e, x, y, s]) => (o += T(x, y, e, s || 22)));
+        return o + hero(p.hx, p.hy, p.hero);
+      },
+      // 左: 管理UI / 右: アクション画面
+      split: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0) + R(10, 10, 150, 180, "rgba(0,0,0,.3)") + R(170, 10, 180, 180, p.panel);
+        p.bars.forEach(([e, pct, c], i) => {
+          const y = 36 + i * 36;
+          o += T(28, y, e, 16) + R(46, y - 6, 100, 12, "rgba(255,255,255,.15)", 1, 6) + R(46, y - 6, pct, 12, c, 1, 6);
+        });
+        p.scene.forEach(([e, x, y, s]) => (o += T(x, y, e, s || 22)));
+        return o + hero(p.hx, p.hy, p.hero, 28);
+      },
+      // 島々の地図
+      map: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        o += `<polyline points="${p.isles.map((q) => q[0] + "," + q[1]).join(" ")}" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2" stroke-dasharray="5 5"/>`;
+        p.isles.forEach(([x, y, r, e]) => (o += `<ellipse cx="${x}" cy="${y}" rx="${r * 1.4}" ry="${r}" fill="${p.land}"/>` + T(x, y, e, r)));
+        return o + hero(p.isles[0][0] + 6, p.isles[0][1] - p.isles[0][2] - 12, p.hero, 24);
+      },
+      // 縦スクロール
+      scroll: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0) + R(0, 166, W, 34, "rgba(0,0,0,.3)", 1, 0);
+        p.foes.forEach(([e, x, y]) => (o += T(x, y, e, 22)));
+        p.bullets.forEach(([x, y]) => (o += `<circle cx="${x}" cy="${y}" r="4" fill="#ffd36b"/>`));
+        p.base.forEach((e, i) => (o += T(40 + i * 70, 184, e, 20)));
+        return o + hero(180, 140, p.hero, 28);
+      },
+      // 横スクロール
+      platform: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0) + R(0, 175, W, 25, p.ground, 1, 0);
+        p.plats.forEach(([x, y, w]) => (o += R(x, y, w, 10, p.ground, 1, 3)));
+        p.items.forEach(([e, x, y, s]) => (o += T(x, y, e, s || 24)));
+        return o + hero(p.hx, p.hy, p.hero, 26);
+      },
+    };
+
+    const IDEAS = [
+      { n:"地下の蟻の王国", form:"断面図(掘り進める)", tag:"地下に巣を掘り広げ、地上へ餌を取りに出る", type:"cave", hero:"🐜",
+        sim:"巣の部屋と幼虫の管理", act:"地上で外敵を避けつつ餌を運ぶ", rog:"地上の地形と天候が毎日変わる",
+        p:{ sky:"#7ab8e0", ground:"#6b4a32", tunnel:"#3a2618", surface:[[50,"🌳"],[150,"🍎"],[260,"🌼"],[320,"🐦"]],
+            path:[[40,48],[40,95],[110,95],[110,145],[210,145],[210,100],[310,100]], items:[["🥚",110,120],["🍞",250,100],["👑",310,100],["🍞",60,95]], hx:160, hy:145 } },
+      { n:"カード錬成の工房", form:"カード", tag:"カードで建物や仲間を呼び出し、リアルタイムで戦う", type:"cards", hero:"🧙",
+        sim:"拠点にカードを並べて生産", act:"戦闘は手札をリアルタイムで使う", rog:"デッキ構築と報酬がランダム",
+        p:{ bg:"#3b4a6a", board:["🧙","🏠","🔨","🌾","👹"], cards:[["🏠","2"],["🔥","1"],["🗡","1"],["🌾","2"]] } },
+      { n:"星間行商", form:"ノードマップ", tag:"航路を選んで交易し、事件や海賊に対応", type:"nodes", hero:"🧑‍🚀",
+        sim:"船の積荷・資金・乗員の管理", act:"遭遇戦では自機を操作", rog:"航路ノードは毎回生成",
+        p:{ bg:"#1e2548", cols:[["🚀"],["🪐","🌑"],["🛰","👾","⭐"],["☄","🏪"],["🌌"]] } },
+      { n:"灯台守", form:"放射状(中心を守る)", tag:"灯台を中心に四方から迫る嵐と怪物を、光を回して迎撃", type:"orbit", hero:"🧑",
+        sim:"灯台と島の補強・住人の世話", act:"光と銛を操作して迎撃", rog:"嵐の波パターンがランダム",
+        p:{ bg:"#14304a", center:"🗼", items:[["🏠",0,30],["⛵",1,120],["⚓",0,210]], foes:[["🐙",2,20],["🦈",2,100],["🌊",2,190],["🐙",2,280],["⛈",1,330]], hr:1, ha:250 } },
+      { n:"塔の管理人", form:"縦の塔", tag:"塔を上へ増築。下から登る敵を各階で食い止める", type:"tower", hero:"🧗",
+        sim:"各階の部屋と住人の管理", act:"階を移動して直接戦う", rog:"敵の波と増築の選択肢がランダム",
+        p:{ bg:"#2b2a4a", ground:"#3a3a3a", floors:[["👑","🏆"],["🧙","📚","🧪"],["🏠","🏠","🍲"],["⚙","🏭"],["🚪","🛡"]], side:[["🦇",60,40],["👻",300,70],["🐺",70,150],["💀",300,150]], hx:290, hy:110 } },
+      { n:"3レーン前線基地", form:"3レーン", tag:"3本の前線に兵を送り、自分も1レーンで戦う", type:"lanes", hero:"🦸",
+        sim:"兵の生産と資源配分", act:"自分で1レーンを担当して戦う", rog:"敵編成と強化が毎戦ランダム",
+        p:{ bg:"#3f5a3a", base:"🏰", items:[["🗡",0,90],["🏹",1,100],["🛡",2,100],["👹",0,250],["👹",1,300],["🐺",2,270],["🧌",2,320]], hx:190, hl:1 } },
+      { n:"空飛ぶ郵便屋", form:"地図・航路", tag:"島々に手紙を届け、届け先の島が発展していく", type:"map", hero:"🕊",
+        sim:"島の発展と住民との関係", act:"風と障害物を避けて飛行", rog:"天候と島の依頼が毎日変わる",
+        p:{ bg:"#7ab8e0", land:"#e8f0f8", isles:[[50,150,28,"🏠"],[130,80,26,"🌲"],[230,135,30,"🏰"],[310,60,24,"⛺"]], deco:[["☁",90,30],["⛈",290,130],["☁",200,45]] } },
+      { n:"ミニ惑星の庭師", form:"周回(小さな惑星)", tag:"小さな惑星の周りを走り、庭を育て隕石を撃ち落とす", type:"orbit", hero:"🧑‍🌾",
+        sim:"植物と建物の育成", act:"惑星を周回して防衛", rog:"隕石の種類が周回ごとに変わる",
+        p:{ bg:"#1a1a3a", center:"🌍", items:[["🌳",0,0],["🌻",0,90],["🏠",0,180],["🌾",0,270]], foes:[["☄",2,30],["☄",2,150],["🛸",2,250],["👾",1,320]], hr:0, ha:45 } },
+      { n:"釣り船団", form:"断面図(海上+海中)", tag:"海上で釣りと戦い、海中に水族館を作る", type:"side", hero:"🧑",
+        sim:"水族館の展示と来館者", act:"釣り・銛・海戦", rog:"海域と魚が出港ごとに変わる",
+        p:{ bg:"#7ab8e0", ground:"#2f6a8a", surface:[[60,"⛵"],[280,"🐦"]], hx:150, layers:[["🐟","🐠","🐡"],["🏠","⚙","🐙"],["🚢","🦈"]] } },
+      { n:"ダンジョン宿屋", form:"断面図", tag:"地下にダンジョンがある宿屋を営む", type:"side", hero:"🧑‍🍳",
+        sim:"客室・食事・評判の管理", act:"地下で素材を狩る", rog:"ダンジョンと客が毎日変わる",
+        p:{ bg:"#5a7a9a", ground:"#4a3a2f", surface:[[60,"🏨"],[280,"🌲"]], hx:170, layers:[["🛏","🛏","🍲","🛏"],["🪨","🕯","👹"],["💎","🐉"]] } },
+      { n:"弾幕牧場", form:"縦スクロール", tag:"縦スクロールで素材を集め、拠点で育てる", type:"scroll", hero:"🚜",
+        sim:"牧場の経営と加工", act:"弾幕を避けて撃つ", rog:"出撃ごとの敵配置と強化がランダム",
+        p:{ bg:"#1b2a2f", foes:[["🐝",60,30],["🐝",120,60],["🦋",210,30],["🐛",270,70],["🐝",320,40],["👑",180,15]], bullets:[[170,120],[190,98],[184,76],[212,58]], base:["🌾","🏠","🐄","🌾","🐔"] } },
+      { n:"昼夜サイクル砦", form:"時間バー+場面", tag:"朝は建設、昼は採取、夕は準備、夜は防衛", type:"timeline", hero:"🧙",
+        sim:"砦の建設と配備", act:"夜に自ら迎撃", rog:"夜の襲撃内容が毎回違う",
+        p:{ bg:"#2b3b4a", segs:[{l:"朝 建設",c:"#e0a43a",w:3},{l:"昼 採取",c:"#4aa86a",w:3},{l:"夕 準備",c:"#c06a3a",w:2},{l:"夜 防衛",c:"#4a4a9a",w:4}], now:0.78,
+            scene:[["🏰",180,125,44],["🧱",120,140],["🧱",240,140],["👹",50,125],["👹",90,145],["🐺",310,130],["🔥",180,82,18]], hx:150, hy:100 } },
+      { n:"スライム合体ラボ", form:"自由移動アリーナ", tag:"スライムを合体させ、新種を作って闘技場で戦う", type:"arena", hero:"🧑‍🔬",
+        sim:"飼育と合成レシピの研究", act:"自由に動いて捕獲・戦闘", rog:"合成結果と出現がランダム",
+        p:{ bg:"#2a4a3a", items:[["🟢",90,70,24],["🟢",120,150,20],["🔵",250,60,26],["🟣",260,140,30],["🧪",60,120,20],["⭐",310,100,18]] } },
+      { n:"横スクロール行商", form:"横スクロール", tag:"屋台を引いて街道を進み、賊を退けて商売", type:"platform", hero:"🧑",
+        sim:"品揃え・価格・街の発展", act:"横スクロールで移動・戦闘", rog:"街道での出会いがランダム",
+        p:{ bg:"#8ac0e8", ground:"#6b8a4a", plats:[[40,130,90],[170,100,80],[270,140,70]], items:[["🏪",80,106,30],["📦",200,76],["👺",290,116],["🪙",150,150,18]], hx:120, hy:158 } },
+      { n:"体内都市", form:"自由移動", tag:"体内の細胞都市を守り、ウイルスと戦う", type:"arena", hero:"🧑‍⚕️",
+        sim:"器官の機能と資源循環", act:"免疫細胞を操作して撃退", rog:"病気の種類が毎回違う",
+        p:{ bg:"#5a2a3a", items:[["🦠",70,60],["🦠",300,80],["🦠",250,150],["🏥",80,140,26],["🩸",200,50],["🩸",140,160]] } },
+      { n:"魔女の宅配薬局", form:"管理画面+飛行画面", tag:"調合画面と飛行画面を行き来する", type:"split", hero:"🧙‍♀️",
+        sim:"薬の調合・在庫・価格", act:"ほうきで森を飛び素材を採取", rog:"森の素材と依頼が日ごとに変わる",
+        p:{ bg:"#3a2a4a", panel:"#2a5a6a", bars:[["🧪",70,"#7bd389"],["🌿",45,"#6cc4ff"],["💰",30,"#ffd36b"],["❤",85,"#ff6b8b"]], scene:[["🌲",210,60],["🌲",325,150],["🍄",230,150],["🐺",315,70]], hx:265, hy:105 } },
+      { n:"戦国城下町", form:"管理画面+合戦", tag:"城下町を整え、合戦では武将を操作", type:"split", hero:"🥷",
+        sim:"石高・兵・民の管理", act:"合戦で武将を操作", rog:"毎年の戦と家臣がランダム",
+        p:{ bg:"#4a3a2a", panel:"#6a5a3a", bars:[["🍚",60,"#e8d9a0"],["💰",40,"#ffd36b"],["👥",70,"#6cc4ff"],["🏯",25,"#ff8f6b"]], scene:[["🏯",205,55,30],["⛰",320,45],["🐎",225,150],["🏹",315,150],["🚩",330,100]], hx:265, hy:105 } },
+      { n:"幽霊屋敷ホテル", form:"断面図(縦)", tag:"幽霊を従業員に、客を満足させ侵入者を追い払う", type:"tower", hero:"👻",
+        sim:"客室と従業員の管理", act:"幽霊を操って侵入者を追い払う", rog:"来客と事件がランダム",
+        p:{ bg:"#2a2040", ground:"#3a2a4a", floors:[["🦇","🕸"],["🛏","👻","🛏"],["🍷","👻"],["🚪","🧳"]], side:[["🌙",60,30],["🧛",305,80],["🧟",70,150],["⚰",300,150]], hx:70, hy:90 } },
+      { n:"砂漠の隊商", form:"地図・航路", tag:"オアシスを結び隊商を守る", type:"map", hero:"🐪",
+        sim:"隊商の積荷とオアシスの拡張", act:"砂嵐・盗賊への対応", rog:"砂漠の地形が毎回変わる",
+        p:{ bg:"#d9b36a", land:"#f3dba0", isles:[[50,140,30,"🌴"],[140,70,26,"⛺"],[230,140,28,"🏜"],[310,60,26,"🏛"]], deco:[["🌪",200,40],["🦂",290,150]] } },
+      { n:"ロボ蜂の巣箱", form:"自由移動", tag:"蜂ロボで花畑を飛び、蜜を集めて巣箱を強化", type:"arena", hero:"🐝",
+        sim:"巣箱の拡張と蜜の加工", act:"自由飛行で採取・熊を回避", rog:"花畑の配置が毎日変わる",
+        p:{ bg:"#5a7a2a", items:[["🌻",80,70,26],["🌷",280,60],["🌼",140,150],["🌺",270,150],["🍯",180,40,24],["🐻",320,110,26]] } },
+    ];
+
+    const root = document.getElementById("grid");
+    IDEAS.forEach((d, i) => {
+      const p = { ...d.p, hero: d.hero };
+      let svg = GEN[d.type](p);
+      (d.p.deco || []).forEach(([e, x, y, s]) => (svg += T(x, y, e, s || 22)));
+      const card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML = `
+        <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${d.n}のプレビュー">${svg}</svg>
+        <div class="body">
+          <h2><span>${i + 21}.</span>${d.n}</h2>
+          <span class="form">画面形式: ${d.form}</span>
+          <p class="tag">${d.tag}</p>
+          <ul>
+            <li class="s"><b>シム</b>${d.sim}</li>
+            <li class="a"><b>アクション</b>${d.act}</li>
+            <li class="r"><b>ローグ</b>${d.rog}</li>
+          </ul>
+        </div>`;
+      root.appendChild(card);
+    });
+  </script>
+</body>
+</html>

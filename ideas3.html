@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RPG×アクション アイデア41〜60</title>
+  <style>
+    :root { --bg:#1b2328; --card:#27343b; --text:#f1f5f2; --sub:#9fb3ba; --rpg:#7bd389; --act:#ff8f6b; --plus:#6cc4ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,"Yu Gothic",sans-serif; }
+    header { max-width:1100px; margin:0 auto; padding:20px 16px 4px; }
+    h1 { margin:0 0 4px; font-size:1.5rem; }
+    header p { margin:0 0 4px; color:var(--sub); font-size:.9rem; }
+    header a { color:var(--plus); margin-right:10px; }
+    #grid { max-width:1100px; margin:0 auto; padding:16px; display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; }
+    .card { background:var(--card); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+    svg { display:block; width:100%; height:auto; }
+    .hero { animation:bob 1s ease-in-out infinite; }
+    @keyframes bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
+    .body { padding:10px 14px 14px; }
+    h2 { margin:0 0 2px; font-size:1.05rem; }
+    h2 span { color:var(--sub); font-weight:400; margin-right:6px; }
+    .form { display:inline-block; font-size:.7rem; color:var(--sub); border:1px solid #456; border-radius:99px; padding:1px 8px; margin:2px 0 6px; }
+    .tag { margin:0 0 8px; color:var(--sub); font-size:.85rem; }
+    ul { list-style:none; margin:0; padding:0; font-size:.82rem; display:grid; gap:4px; }
+    li b { display:inline-block; min-width:3.6em; font-size:.72rem; padding:1px 6px; border-radius:99px; color:#10181c; margin-right:6px; text-align:center; }
+    .r b { background:var(--rpg); } .a b { background:var(--act); } .p b { background:var(--plus); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⚔️ RPG × アクション アイデア20選(41〜60)</h1>
+    <p>物語・成長・装備(RPG)と、自分で操作して戦う面白さ(アクション)を軸にした案です。シムやローグライクを足す場合の方向も1行ずつ添えました。</p>
+    <p><a href="ideas.html">1〜20</a><a href="ideas2.html">21〜40</a></p>
+  </header>
+  <div id="grid"></div>
+
+  <script>
+    const W = 360, H = 200;
+    const T = (x, y, e, s = 22, c = "") => `<text x="${x}" y="${y}" font-size="${s}" text-anchor="middle" dominant-baseline="central" class="${c}">${e}</text>`;
+    const R = (x, y, w, h, f, o = 1, r = 6) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${f}" opacity="${o}"/>`;
+    const hero = (x, y, e, s = 26) => T(x, y, e, s, "hero");
+    const g = (s) => s.split("|").map((r) => r.trim().split(/\s+/));
+    const hpBar = (x, y, w, pct, c = "#6be28a") => R(x - w / 2, y, w, 6, "rgba(0,0,0,.5)", 1, 3) + R(x - w / 2, y, w * pct, 6, c, 1, 3);
+
+    const GEN = {
+      // JRPG風の戦闘画面(ただしリアルタイム)
+      battle: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0) + R(0, 140, W, 60, p.ground, 1, 0);
+        o += hero(70, 112, p.hero, 38) + hpBar(70, 72, 56, p.hp);
+        (p.party || []).forEach((e, i) => (o += T(30 + i * 8, 130 + i * 4, e, 22)));
+        p.foes.forEach(([e, x, y, s, hp]) => (o += T(x, y, e, s) + hpBar(x, y - s / 2 - 10, 56, hp, "#e86b6b")));
+        (p.fx || []).forEach(([e, x, y, s]) => (o += T(x, y, e, s)));
+        o += R(0, 150, W, 50, "rgba(0,0,0,.45)", 1, 0);
+        p.skills.forEach(([e, k], i) => {
+          o += R(20 + i * 60, 158, 44, 34, "rgba(255,255,255,.15)") + T(42 + i * 60, 172, e, 18);
+          o += `<text x="${42 + i * 60}" y="187" font-size="9" fill="#fff" text-anchor="middle">${k}</text>`;
+        });
+        return o;
+      },
+      // 自由移動のフィールド + 仲間が後ろにつく
+      field: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        p.items.forEach(([e, x, y, s]) => (o += T(x, y, e, s || 22)));
+        (p.party || []).forEach((e, i) => (o += T(p.hx - 30 * (i + 1), p.hy + 6 * (i + 1), e, 20)));
+        o += `<path d="M ${p.hx + 18} ${p.hy - 28} A 32 32 0 0 1 ${p.hx + 18} ${p.hy + 28}" fill="none" stroke="#fff" stroke-width="3" opacity=".75"/>`;
+        o += T(32, 16, "❤❤❤", 14);
+        return o + hero(p.hx, p.hy, p.hero, 28);
+      },
+      // ボス戦(攻撃予告つき)
+      boss: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        o += `<ellipse cx="180" cy="115" rx="165" ry="78" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.2)" stroke-width="2"/>`;
+        p.zones.forEach(([x, y, r]) => (o += `<circle cx="${x}" cy="${y}" r="${r}" fill="rgba(255,60,60,.25)" stroke="#ff5a5a" stroke-dasharray="4 4"/>`));
+        o += R(40, 8, 280, 10, "rgba(0,0,0,.45)", 1, 5) + R(40, 8, p.bossHp, 10, "#e04a4a", 1, 5);
+        o += hero(180, 58, p.boss, 62);
+        return o + T(p.hx, p.hy, p.hero, 26) + `<path d="M ${p.hx - 30} ${p.hy + 4} l -14 0 m 6 -6 l -6 6 l 6 6" fill="none" stroke="#fff" stroke-width="2" opacity=".7"/>`;
+      },
+      // 会話シーン(ノベル+RPG)
+      dialog: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        p.scene.forEach(([e, x, y, s]) => (o += T(x, y, e, s || 24)));
+        o += hero(p.hx, p.hy, p.hero, 38);
+        o += R(14, 128, 332, 64, "rgba(0,0,0,.65)") + R(24, 118, 76, 20, "#7bd389", 1, 10);
+        o += `<text x="62" y="128" font-size="12" fill="#10181c" text-anchor="middle" dominant-baseline="central" font-weight="700">${p.name}</text>`;
+        p.text.forEach((t, i) => (o += `<text x="28" y="${156 + i * 20}" font-size="12.5" fill="#fff" dominant-baseline="central">${t}</text>`));
+        return o;
+      },
+      // マス目のダンジョン
+      tiles: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        p.rows.forEach((row, r) => row.forEach((t, c) => {
+          const x = 18 + c * 36, y = 10 + r * 36;
+          if (t === "#") o += R(x, y, 34, 34, "rgba(255,255,255,.22)", 1, 3);
+          else { o += R(x, y, 34, 34, "rgba(0,0,0,.25)", 1, 3); if (t === "H") o += hero(x + 17, y + 17, p.hero, 24); else if (t !== ".") o += T(x + 17, y + 17, t, 22); }
+        }));
+        return o;
+      },
+      nodes: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        const pts = p.cols.map((c, i) => c.map((e, j) => [30 + i * 75, ((j + 1) * H) / (c.length + 1), e]));
+        pts.forEach((c, i) => { if (i < pts.length - 1) c.forEach((a) => pts[i + 1].forEach((b) => (o += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="rgba(255,255,255,.3)" stroke-width="2"/>`))); });
+        pts.forEach((c, i) => c.forEach((a) => { o += `<circle cx="${a[0]}" cy="${a[1]}" r="17" fill="rgba(0,0,0,.4)" stroke="${i === 0 ? "#fff" : "rgba(255,255,255,.4)"}" stroke-width="${i === 0 ? 3 : 1.5}"/>` + T(a[0], a[1], a[2], 18); }));
+        return o + hero(30, pts[0][0][1] - 30, p.hero, 22);
+      },
+      orbit: (p) => {
+        const cx = 180, cy = 100, RR = [38, 62, 88];
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        RR.forEach((r) => (o += `<ellipse cx="${cx}" cy="${cy}" rx="${r * 1.8}" ry="${r}" fill="none" stroke="rgba(255,255,255,.25)" stroke-dasharray="3 4"/>`));
+        o += T(cx, cy, p.center, 30);
+        const pos = (ring, a) => [cx + RR[ring] * 1.8 * Math.cos((a * Math.PI) / 180), cy + RR[ring] * Math.sin((a * Math.PI) / 180)];
+        [...p.items, ...p.foes].forEach(([e, ring, a]) => { const [x, y] = pos(ring, a); o += T(x, y, e, 18); });
+        const [hx, hy] = pos(p.hr, p.ha);
+        return o + hero(hx, hy, p.hero, 22);
+      },
+      lanes: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        [0, 1, 2].forEach((i) => { o += R(8, 10 + i * 62, W - 16, 56, "rgba(0,0,0,.2)") + T(28, 38 + i * 62, p.base, 24); });
+        p.items.forEach(([e, l, x]) => (o += T(x, 38 + l * 62, e, 22)));
+        return o + hero(p.hx, 38 + p.hl * 62, p.hero);
+      },
+      cards: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0) + R(0, 0, W, 95, "rgba(0,0,0,.2)", 1, 0);
+        p.board.forEach((e, i) => { o += R(20 + i * 64, 18, 56, 64, "rgba(255,255,255,.1)"); o += i === 0 ? hero(48, 50, e, 28) : T(48 + i * 64, 50, e, 28); });
+        p.cards.forEach(([e, c], i) => {
+          const x = 24 + i * 80;
+          o += R(x, 108, 68, 86, "#f4efe2", 1, 8) + T(x + 34, 152, e, 30);
+          o += `<circle cx="${x + 11}" cy="120" r="10" fill="#4aa3ff"/><text x="${x + 11}" y="120" font-size="12" fill="#fff" text-anchor="middle" dominant-baseline="central">${c}</text>`;
+        });
+        return o;
+      },
+      platform: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0) + R(0, 175, W, 25, p.ground, 1, 0);
+        p.plats.forEach(([x, y, w]) => (o += R(x, y, w, 10, p.ground, 1, 3)));
+        p.items.forEach(([e, x, y, s]) => (o += T(x, y, e, s || 24)));
+        return o + hero(p.hx, p.hy, p.hero, 26);
+      },
+      map: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0);
+        o += `<polyline points="${p.isles.map((q) => q[0] + "," + q[1]).join(" ")}" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2" stroke-dasharray="5 5"/>`;
+        p.isles.forEach(([x, y, r, e]) => (o += `<ellipse cx="${x}" cy="${y}" rx="${r * 1.4}" ry="${r}" fill="${p.land}"/>` + T(x, y, e, r)));
+        return o + hero(p.isles[0][0] + 6, p.isles[0][1] - p.isles[0][2] - 12, p.hero, 24);
+      },
+      split: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0) + R(10, 10, 150, 180, "rgba(0,0,0,.3)") + R(170, 10, 180, 180, p.panel);
+        p.bars.forEach(([e, pct, c], i) => { const y = 36 + i * 36; o += T(28, y, e, 16) + R(46, y - 6, 100, 12, "rgba(255,255,255,.15)", 1, 6) + R(46, y - 6, pct, 12, c, 1, 6); });
+        p.scene.forEach(([e, x, y, s]) => (o += T(x, y, e, s || 22)));
+        return o + hero(p.hx, p.hy, p.hero, 28);
+      },
+      tower: (p) => {
+        let o = R(0, 0, W, H, p.bg, 1, 0) + R(0, 172, W, 28, p.ground, 1, 0);
+        const n = p.floors.length, h = (170 - 8) / n;
+        p.floors.forEach((row, i) => {
+          const y = 8 + i * h;
+          o += R(110, y + 2, 140, h - 4, "rgba(255,255,255,.14)");
+          row.forEach((e, j) => (o += T(110 + (140 * (j + 0.5)) / row.length, y + h / 2, e, Math.min(22, h - 12))));
+        });
+        p.side.forEach(([e, x, y]) => (o += T(x, y, e, 22)));
+        return o + hero(p.hx, p.hy, p.hero, 24);
+      },
+    };
+
+    const IDEAS = [
+      { n:"時間巻き戻しの剣士", form:"戦闘画面(リアルタイム)", type:"battle", hero:"🤺", tag:"戦闘中に時間を巻き戻し、被弾を無かったことにできる",
+        rpg:"装備とステータスの成長、分岐する物語", act:"回避・攻撃に加え、巻き戻しゲージを管理", plus:"シム: 巻き戻した分だけ街が荒れる / ローグ: 巻き戻し回数が周回ごとに変わる",
+        p:{ bg:"#3a3a5a", ground:"#2a2a44", hp:.7, party:["🧙"], foes:[["🐉",260,95,56,.5],["👹",325,115,32,.8]], fx:[["💥",215,95,24],["⏪",70,45,16]], skills:[["🗡","Z"],["⏪","X"],["🔥","C"],["🛡","V"]] } },
+      { n:"光と影の二人旅", form:"横スクロール", type:"platform", hero:"🧍", tag:"光の少女と影の猫を切り替えて進む二人旅",
+        rpg:"二人の絆で解放されるスキルと会話", act:"光側・影側で足場や敵が入れ替わる", plus:"シム: 旅の途中で灯台の村を育てる",
+        p:{ bg:"#6a6a9a", ground:"#2a2a3a", plats:[[40,130,90],[170,100,80],[270,140,70]], items:[["☀",80,100],["🌑",200,70],["👻",290,115],["🔑",150,150,18],["🐈‍⬛",150,158]], hx:120, hy:158 } },
+      { n:"デッキで戦う冒険", form:"カード", type:"cards", hero:"🧙", tag:"カードを選んでリアルタイムに戦う旅",
+        rpg:"仲間の加入・カードの収集と成長", act:"手札を状況に応じて切る(待ち時間あり)", plus:"ローグ: 周回ごとにデッキを再構築",
+        p:{ bg:"#4a3b5a", board:["🧙","🧌","🐺","🌲","🏰"], cards:[["🗡","1"],["🔥","2"],["❄","2"],["💊","1"]] } },
+      { n:"捕食進化の獣", form:"自由移動フィールド", type:"field", hero:"🦊", tag:"倒した獣の能力を奪い、姿と技を進化させる",
+        rpg:"能力の継承と進化ツリー", act:"噛みつき・突進などの近接アクション", plus:"シム: 巣を育てて子を増やす",
+        p:{ bg:"#3a5a3a", items:[["🌲",60,50,28],["🌲",300,60,28],["🐇",250,140],["🦌",100,150],["🍖",200,50,18],["🐺",300,130]], party:["🐾"], hx:170, hy:100 } },
+      { n:"星座スキルツリーの勇者", form:"スキルツリー(星座)", type:"nodes", hero:"🧙", tag:"スキルを星座としてつなぎ、並びで効果が変わる",
+        rpg:"星座の形で組むスキル構築", act:"選んだ星座がそのまま技になる戦闘", plus:"ローグ: 星の配置が周回ごとに変わる",
+        p:{ bg:"#14163a", cols:[["✨"],["⚔","🛡"],["🔥","❄","⚡"],["🌟","🌙"],["👑"]] } },
+      { n:"ボスラッシュの語り部", form:"ボス戦", type:"boss", hero:"🧑", tag:"全編がボス戦。合間の会話で物語が進む",
+        rpg:"会話の選択で結末が分岐", act:"攻撃パターンを読んで避ける対ボス戦", plus:"シム: ボスの素材で装備工房を育てる",
+        p:{ bg:"#3a2a2a", boss:"🐲", bossHp:200, zones:[[120,130,38],[240,120,30]], hx:180, hy:162 } },
+      { n:"魔導書の司書", form:"会話シーン+戦闘", type:"dialog", hero:"🧑‍🏫", tag:"本の世界に入り、物語を書き換えながら冒険する",
+        rpg:"書き換えた設定が世界とステータスに反映", act:"場面の途中で挿入されるアクション戦闘", plus:"ローグ: 本の内容が毎回ランダム生成",
+        p:{ bg:"#3a4a6a", name:"司書", text:["「この本の結末は、まだ決まっていません。」","▶ 結末を書き換える    ▶ 物語に入る"], scene:[["📖",190,55,56],["🐉",290,85,38],["✨",140,28,16]], hx:90, hy:90 } },
+      { n:"四人パーティ切替", form:"自由移動フィールド", type:"field", hero:"🗡", tag:"4人の役割を切り替えて連携技を出す",
+        rpg:"職業・装備・パーティ編成", act:"リアルタイムで操作キャラを切替", plus:"シム: 拠点で仲間の訓練",
+        p:{ bg:"#4a5a3a", items:[["🌳",60,50,28],["🪨",310,60,26],["🐗",280,130],["🐗",240,160],["💎",110,160,18]], party:["🧙","🏹","🛡"], hx:170, hy:100 } },
+      { n:"音で戦う吟遊詩人", form:"3レーン(リズム)", type:"lanes", hero:"🪕", tag:"リズムに合わせて攻撃・防御する",
+        rpg:"曲=スキルとして収集、仲間と合奏", act:"レーンに流れる音符を入力で処理", plus:"ローグ: 譜面が出撃ごとに変化",
+        p:{ bg:"#3a2a4a", base:"🎤", items:[["🎵",0,150],["🎵",0,230],["🎵",1,190],["🎵",2,120],["🎵",2,270],["👹",1,320]], hx:80, hl:1 } },
+      { n:"ダンジョンの記憶", form:"マス目ダンジョン(リアルタイム)", type:"tiles", hero:"🧙", tag:"倒れるたびに記憶を持ち越して強くなる",
+        rpg:"持ち越す記憶がステータスや技に", act:"ターンなしのリアルタイム戦闘", plus:"シム: 記憶を保管する図書館を育てる",
+        p:{ bg:"#1f2a2a", rows:g("# # # # # # # # #|# . . 💀 . . 🗝 . #|# . # # . # # . #|# H . . . 👹 . 🚪 #|# # # # # # # # #") } },
+      { n:"空賊の船長", form:"地図・航路", type:"map", hero:"⛵", tag:"船を操縦して空島を巡り、仲間と宝を集める",
+        rpg:"船員・船の成長と物語", act:"空中戦と上陸戦", plus:"シム: 船の改造と島の拠点",
+        p:{ bg:"#6aa8d8", land:"#e8f0f8", isles:[[50,150,26,"🏝"],[140,70,28,"🏴‍☠️"],[240,140,30,"🏰"],[310,60,24,"🌋"]], deco:[["☁",90,30],["🦅",200,40],["💣",290,120]] } },
+      { n:"狩人の一族", form:"ボス戦", type:"boss", hero:"🏹", tag:"大型モンスターを狩り、素材で装備を強化",
+        rpg:"一族の物語と装備成長", act:"大型モンスターの攻撃を見切る", plus:"シム: 里の工房と畑",
+        p:{ bg:"#2a3a2a", boss:"🦖", bossHp:160, zones:[[100,120,36],[250,130,36],[180,150,30]], hx:180, hy:165 } },
+      { n:"鍛冶屋の息子", form:"鍛冶画面+冒険", type:"split", hero:"🧑‍🔧", tag:"自分で鍛えた武器を持って冒険に出る",
+        rpg:"自作武器の性能が戦力に", act:"鍛冶ミニゲームと採掘・戦闘", plus:"シム: 店の経営と評判",
+        p:{ bg:"#4a3a30", panel:"#3a4a5a", bars:[["🔨",65,"#ffd36b"],["⛏",40,"#6cc4ff"],["🔥",80,"#ff8f6b"],["⭐",30,"#d3a6ff"]], scene:[["🪨",210,60],["🪨",320,140],["🐲",300,60,34],["⛏",230,150]], hx:265, hy:105 } },
+      { n:"忍者の里の掟", form:"横スクロール", type:"platform", hero:"🥷", tag:"壁走りと隠密で任務をこなし、里を守る",
+        rpg:"忍術ツリーと任務の物語", act:"壁走り・隠密・手裏剣", plus:"シム: 里の施設を育てる",
+        p:{ bg:"#2a3a5a", ground:"#1a1a2a", plats:[[30,120,80],[160,90,70],[260,130,80]], items:[["🏯",80,92,30],["🐍",190,64],["🌕",320,30,30],["🗡",290,106,18]], hx:120, hy:158 } },
+      { n:"蘇る英雄", form:"マス目フィールド", type:"tiles", hero:"🧙", tag:"死ぬと別の英雄として蘇り、墓から装備を回収",
+        rpg:"英雄ごとの職業と物語", act:"リアルタイム戦闘", plus:"ローグ: 英雄の素質が毎回ランダム",
+        p:{ bg:"#2a2230", rows:g(". . . . . . . . .|. 🪦 . . 🌳 . . 🏠 .|. . . H . . . . .|. 🌳 . . . 🪦 . 🌳 .|. . . . . . . . .") } },
+      { n:"魔法の絵筆", form:"自由移動フィールド", type:"field", hero:"🧑‍🎨", tag:"描いた絵が実体化して戦う",
+        rpg:"描ける絵の種類の成長と物語", act:"線を描いて足場・攻撃・盾を作る", plus:"シム: 描いた村が実体化して育つ",
+        p:{ bg:"#d8cfa8", items:[["🖌",300,40,24],["🌈",60,50,28],["🐉",280,120,36],["☁",120,150,26],["⭐",230,40,16]], hx:170, hy:100 } },
+      { n:"時計仕掛けの街", form:"断面図(縦)", type:"tower", hero:"🧑‍🔧", tag:"歯車を回して仕掛けを動かし、ダンジョン化した街を探索",
+        rpg:"機械の改造と装備", act:"仕掛け解き+戦闘", plus:"ローグ: 仕掛けの配置が毎回変わる",
+        p:{ bg:"#3a3020", ground:"#2a2418", floors:[["🕰"],["⚙","⚙","🏠"],["🏭","🔧"],["🚂","🎩"]], side:[["⚙",60,40],["🦇",300,60],["🤖",70,150],["⚙",300,150]], hx:290, hy:110 } },
+      { n:"夢の中の探偵", form:"会話シーン+追跡", type:"dialog", hero:"🕵️", tag:"夢の中で聞き込みと追跡をし、夢の敵と戦う",
+        rpg:"推理・会話選択と成長", act:"追跡・戦闘のアクションパート", plus:"ローグ: 夢の構造が毎回変わる",
+        p:{ bg:"#2a2a4a", name:"探偵", text:["「ここは、誰の夢だ?」","▶ 調べる    ▶ 追う    ▶ 戦う"], scene:[["🌙",305,30,32],["🏙",230,80,50],["🚪",50,85,34]], hx:130, hy:90 } },
+      { n:"巨人の肩の上", form:"断面図(縦に登る)", type:"tower", hero:"🧗", tag:"巨人の体を登りながら、各部位で戦う",
+        rpg:"巨人の物語と装備", act:"登攀アクション", plus:"シム: 登山キャンプを育てる",
+        p:{ bg:"#5a6a8a", ground:"#4a5a3a", floors:[["👁","👁"],["💪","🧌","💪"],["🌲","⛺","🌲"],["🦵","🦵"]], side:[["☁",60,30],["🦅",300,50],["🪨",70,140],["🌿",300,150]], hx:70, hy:100 } },
+      { n:"精霊契約の旅", form:"放射状(周囲に精霊)", type:"orbit", hero:"🧚", tag:"精霊を周囲に纏い、属性を使い分けて戦う",
+        rpg:"精霊との契約と成長", act:"周囲の精霊を回して攻防", plus:"ローグ: 契約できる精霊が毎回違う",
+        p:{ bg:"#1a3a3a", center:"🧙", items:[["🔥",0,0],["💧",0,120],["🌪",0,240]], foes:[["👹",2,40],["🐺",2,160],["🐉",1,280],["👺",2,320]], hr:1, ha:90 } },
+    ];
+
+    const root = document.getElementById("grid");
+    IDEAS.forEach((d, i) => {
+      const p = { ...d.p, hero: d.hero };
+      let svg = GEN[d.type](p);
+      (d.p.deco || []).forEach(([e, x, y, s]) => (svg += T(x, y, e, s || 22)));
+      const card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML = `
+        <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${d.n}のプレビュー">${svg}</svg>
+        <div class="body">
+          <h2><span>${i + 41}.</span>${d.n}</h2>
+          <span class="form">画面形式: ${d.form}</span>
+          <p class="tag">${d.tag}</p>
+          <ul>
+            <li class="r"><b>RPG</b>${d.rpg}</li>
+            <li class="a"><b>アクション</b>${d.act}</li>
+            <li class="p"><b>足すなら</b>${d.plus}</li>
+          </ul>
+        </div>`;
+      root.appendChild(card);
+    });
+  </script>
+</body>
+</html>
